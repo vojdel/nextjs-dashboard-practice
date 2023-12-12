@@ -23,6 +23,7 @@ export default function Search({ placeholder }: { placeholder: string }) {
     } else {
       params.delete('query');
     }
+    params.set('page', '1');
 
     replace(`${pathname}?${params.toString()}`);
   }, WAIT_BETWEEN_CHANGES);
