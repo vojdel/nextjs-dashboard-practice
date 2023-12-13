@@ -21,6 +21,13 @@ const CreateInvoiceFormSchema = CreateInvoiceSchema.omit({
 
 const UpdateInvoice = CreateInvoiceSchema.omit({ id: true, date: true });
 
+/**
+ * Creates an invoice based on the provided form data.
+ *
+ * @param {FormData} formData - The form data containing the details of the invoice.
+ * @return {Promise<void>} - A promise that resolves when the invoice is created successfully.
+ */
+
 export async function createInvoice(formData: FormData) {
   const { customerId, amount, status } = CreateInvoiceFormSchema.parse({
     customerId: formData.get('customerId'),
@@ -33,14 +40,27 @@ export async function createInvoice(formData: FormData) {
   // creamos la fecha actual
   const [date] = new Date().toISOString().split('T');
 
-  await sql`
-  INSERT INTO invoices (id, customer_id, amount, status, date)
-  VALUES (${customerId}, ${customerId}, ${amountInCents}, ${status}, ${date})`;
+  try {
+    await sql`
+    INSERT INTO invoices (id, customer_id, amount, status, date)
+    VALUES (${customerId}, ${customerId}, ${amountInCents}, ${status}, ${date})`;
+  } catch (error) {
+    return {
+      message: 'Database Error: Failed to Create Invoice',
+    };
+  }
 
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
 
+/**
+ * Updates an invoice with the specified ID using the provided form data.
+ *
+ * @param {string} id - The ID of the invoice to be updated.
+ * @param {FormData} formData - The form data containing the updated invoice information.
+ * @return {Promise<void>} - A Promise that resolves when the invoice is successfully updated.
+ */
 export async function updateInvoice(id: string, formData: FormData) {
   const { customerId, amount, status } = UpdateInvoice.parse({
     customerId: formData.get('customerId'),
@@ -51,16 +71,33 @@ export async function updateInvoice(id: string, formData: FormData) {
   // Transformamos para evitar errores de redondeo
   const amountInCents = amount * 100;
 
-  await sql`
-  UPDATE invoices
-  Set customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-  WHERE id = ${id}`;
+  try {
+    await sql`
+    UPDATE invoices
+    Set customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+    WHERE id = ${id}`;
+  } catch (error) {
+    return {
+      message: 'Database Error: Failed to Update Invoice',
+    };
+  }
 
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
 
+/**
+ * Deletes an invoice with the specified ID.
+ *
+ * @param {string} id - The ID of the invoice to be deleted.
+ * @return {Promise<void>} - A promise that resolves when the invoice is successfully deleted.
+ */
 export async function deleteInvoice(id: string) {
-  await sql`DELETE FROM invoices WHERE id = ${id}`;
-  revalidatePath('/dashboard/invoices');
+  try {
+    await sql`DELETE FROM invoices WHERE id = ${id}`;
+    revalidatePath('/dashboard/invoices');
+    return { message: 'Deleted Invoice.' };
+  } catch (error) {
+    return { message: 'Database Error: Failed to Delete Invoice.' };
+  }
 }
