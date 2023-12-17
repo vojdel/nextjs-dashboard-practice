@@ -1,10 +1,7 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: {
-    template: '%s | Acme Dashboard',
-    default: 'Invoices',
-  },
+  title: 'Login',
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
